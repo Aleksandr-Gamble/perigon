@@ -1,102 +1,63 @@
-use std::{env, vec::Vec};
-use serde::{Serialize, Deserialize};
+use std::{env, collections::HashMap};
+use chrono::NaiveDate;
 
-// resp = requests.get(f"{ALL_URL}&source=cnn.com&sortBy=date&page=2&size=100")
+pub struct ArticleRequest {
+    pub q: Option<String>,      // Search query, each article will be scored and ranked against it. Articles are searched on the title, description, and content fields.
+    pub title: Option<String>, // Search article headlines/title field. Semantic similar to q parameter.
+    pub desc: Option<String>, //Search query on the description field. Semantic similar to q parameter.
 
-/// This is the top-level Stringuct that gets returned when you get articles using the /all endpoint
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Articles {
-    pub status: u8,         // typically 200 for OK http response
-    pub numResults: u16 ,    // total number of articles returned 
-    pub artices: Vec<Article>,
+}
+
+pub struct RequestBuilder {
+    api_key: String,
+    params: HashMap<&'static str, String>,
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Article {
-    pub url: String,
-    pub authorsByline: Option<String>,   // seems to always be blank 
-    pub articleId: String,
-    pub clusterId: String,
-    pub source: Source,
-    pub imageUrl: String,
-    pub country: String,
-    pub language: String,
-    pub pubDate: String,
-    pub addDate: String,
-    pub refreshDate: String,
-    pub title: String,
-    pub description: String,
-    pub content: String,
-    pub medium: String,
-    pub labels: Vec<Label>,
-    pub matchedAuthors: Vec<Author>,
-    pub claim: Option<String>,
-    pub verdict: Option<String>,        // seems to always be blank
-    pub keywords: Vec<Keyword>,
-    pub topics: Vec<Topic>,
-    pub categories: Vec<Category>,
-    pub entities: Vec<Entity>,
-    pub sentiment: Sentiment,
-    pub summary: String,
-    pub translation: Option<String>,
-    pub locations: Vec<Location>,
-    pub reprint: bool,
-    pub places: Option<String>,         // This seems to always be blank
-}
+impl RequestBuilder {
+
+    /// instantiate a new RequestBuilder using an API key
+    pub fn new(api_key: &str) -> Self {
+        let api_key = api_key.to_string();
+        let params = HashMap::<&'static str, String>::new();
+        RequestBuilder{api_key, params}
+    }
+
+    /// instantiate a new RequestBuilder by getting the api_key from an environment variable
+    pub fn new_env(variable: &str) -> Self {
+        let api_key = env::var(variable).unwrap();
+        RequestBuilder::new(&api_key)
+    }
+
+    /// provide a query phrase for searching within title, description, and content fields
+    pub fn query(&mut self, query: &str) {
+        self.params.insert("q", query.to_string());
+    } 
+
+    /// search withing article title+headlines
+    pub fn title(&mut self, title: &str) {
+        self.params.insert("title", title.to_string());
+    } 
+
+    /// search withing article content
+    pub fn content(&mut self, content: &str) {
+        self.params.insert("content", content.to_string());
+    } 
+
+    /// search withing article url: i.e. "travel" etc.
+    pub fn url(&mut self, url: &str) {
+        self.params.insert("url", url.to_string());
+    } 
+
+    /// filter by articles published on or after a specified date
+    pub fn from(&mut self, from_date: &NaiveDate) {
+        self.params.insert("from", from_date.to_string());
+    } 
+
+    /// filter by articles published on or before a specified date
+    pub fn to(&mut self, to_date: &NaiveDate) {
+        self.params.insert("to", to_date.to_string());
+    } 
 
 
-#[derive(Serialize, Deserialize, Debug)]
-
-pub struct Sentiment {
-    pub positive: f64,
-    pub negative: f64,
-    pub neutral: f64,    
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Author {
-    pub id: String,     // CHAR(32) id
-    pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Keyword {
-    pub name: String,
-    pub weight: f64,    // the weighting of this keyword in the article ?
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Topic {
-    pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Category {
-    pub name: String,
-}
-
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Label {
-    pub name: String,
-}
-
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Entity {
-    pub data: String,   // the name of the entity
-    pub r#type: String, // the type of entity
-    pub mentions: u16,  // the number of times this entity is mentioned in the article 
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Location {
-    pub city: String,
-    pub state: String, // US state or country 
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Source {
-    pub domain: String, 
 }
