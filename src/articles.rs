@@ -26,9 +26,9 @@ pub struct Article {
     pub addDate: String,
     pub refreshDate: String,
     pub title: String,
-    pub description: String,
+    pub description: Option<String>,
     pub content: String,
-    pub medium: String,
+    pub medium: String,                 // typically 'Article'
     pub labels: Vec<Label>,
     pub matchedAuthors: Vec<Author>,
     pub claim: Option<String>,          // seems to always be blank
@@ -56,7 +56,7 @@ pub struct Sentiment {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Author {
-    pub id: String,     // CHAR(32) id
+    pub id: String,     // CHAR(32) / UUID id 
     pub name: String,
 }
 

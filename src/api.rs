@@ -1,12 +1,8 @@
 use std::{env, collections::HashMap};
 use chrono::NaiveDate;
 
-pub struct ArticleRequest {
-    pub q: Option<String>,      // Search query, each article will be scored and ranked against it. Articles are searched on the title, description, and content fields.
-    pub title: Option<String>, // Search article headlines/title field. Semantic similar to q parameter.
-    pub desc: Option<String>, //Search query on the description field. Semantic similar to q parameter.
+pub type GenericError = Box<dyn std::error::Error + Send + Sync>;
 
-}
 
 pub struct RequestBuilder {
     api_key: String,
@@ -29,6 +25,24 @@ impl RequestBuilder {
         RequestBuilder::new(&api_key)
     }
 
+    /// generate the url for this request
+    pub fn to_url(&self) -> String {
+        let mut url = format!("https://api.goperigon.com/v1/all?apiKey={}", &self.api_key);
+        for (k, v) in &self.params {
+            url.push('&');
+            url.push_str(k);
+            url.push('=');
+            url.push_str(&v);
+        }
+        url
+    }
+
+}
+
+
+/// These methods below are related to specifying the query 
+impl RequestBuilder {
+
     /// provide a query phrase for searching within title, description, and content fields
     pub fn query(&mut self, query: &str) {
         self.params.insert("q", query.to_string());
@@ -49,6 +63,11 @@ impl RequestBuilder {
         self.params.insert("url", url.to_string());
     } 
 
+    /// search by know author ID
+    pub fn journalist_id(&mut self, journalist_id: &str) {
+        self.params.insert("journalistId", journalist_id.to_string());
+    }
+
     /// filter by articles published on or after a specified date
     pub fn from(&mut self, from_date: &NaiveDate) {
         self.params.insert("from", from_date.to_string());
@@ -58,6 +77,7 @@ impl RequestBuilder {
     pub fn to(&mut self, to_date: &NaiveDate) {
         self.params.insert("to", to_date.to_string());
     } 
+
 
 
 }
